@@ -1,0 +1,55 @@
+name: MoSuan Windows Build
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  QT_VERSION: '6.8.3'
+
+jobs:
+  build-windows:
+    runs-on: windows-2022
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: ${{ env.QT_VERSION }}
+          host: windows
+          target: desktop
+          arch: win64_msvc2022_64
+          modules: 'qtimageformats qtpdf'
+          cache: true
+
+      - name: Configure
+        shell: pwsh
+        run: |
+          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        shell: pwsh
+        run: |
+          cmake --build build --config Release --parallel
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $root = "build/Release"
+          if (!(Test-Path $root)) { $root = "build" }
+          New-Item -ItemType Directory -Force -Path package | Out-Null
+          Get-ChildItem $root -Recurse -File | Where-Object { $_.Extension -in '.exe','.dll' } | Copy-Item -Destination package -Force
+          Compress-Archive -Path package/* -DestinationPath MoSuan-Windows-x64.zip -Force
+
+      - name: Upload EXE package
+        uses: actions/upload-artifact@v4
+        with:
+          name: MoSuan-Windows-x64
+          path: MoSuan-Windows-x64.zip
+          if-no-files-found: error
