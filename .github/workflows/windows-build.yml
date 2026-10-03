@@ -8,46 +8,87 @@ on:
 permissions:
   contents: read
 
-env:
-  QT_VERSION: '6.8.3'
-
 jobs:
   build-windows:
+    name: Build MoSuan Windows x64
     runs-on: windows-2022
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Install Qt
-        uses: jurplel/install-qt-action@v4
+      - name: Setup MSYS2 CLANG64
+        uses: msys2/setup-msys2@v2
         with:
-          version: ${{ env.QT_VERSION }}
-          host: windows
-          target: desktop
-          arch: win64_msvc2022_64
-          modules: 'qtimageformats qtpdf'
-          cache: true
-
-      - name: Configure
-        shell: pwsh
-        run: |
-          cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+          msystem: CLANG64
+          update: true
+          install: >
+            mingw-w64-clang-x86_64-clang
+            mingw-w64-clang-x86_64-lld
+            mingw-w64-clang-x86_64-make
+            mingw-w64-clang-x86_64-cmake
+            mingw-w64-clang-x86_64-pkgconf
+            mingw-w64-clang-x86_64-pkg-config
+            mingw-w64-clang-x86_64-cppwinrt
+            mingw-w64-clang-x86_64-qt6-base
+            mingw-w64-clang-x86_64-qt6-tools
+            mingw-w64-clang-x86_64-qt6-svg
+            mingw-w64-clang-x86_64-qt6-translations
+            mingw-w64-clang-x86_64-mupdf
+            mingw-w64-clang-x86_64-ntldd
 
       - name: Build
         shell: pwsh
+        timeout-minutes: 60
         run: |
-          cmake --build build --config Release --parallel
+          $ErrorActionPreference = 'Stop'
+          $toolchainPath = "$env:RUNNER_TEMP\msys64\clang64"
+          if (!(Test-Path "$toolchainPath\bin\clang.exe")) { throw "MSYS2 CLANG64 toolchain not found: $toolchainPath" }
+          Remove-Item build -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path build | Out-Null
+          $env:PATH = "$toolchainPath\bin;$env:PATH"
+
+          $lrelease = "$toolchainPath\bin\lrelease-qt6.exe"
+          if (Test-Path $lrelease) {
+            $tsFiles = @(Get-ChildItem -Path '.\resources\translations\app_*.ts' -ErrorAction SilentlyContinue)
+            if ($tsFiles.Count -gt 0) { & $lrelease @($tsFiles.FullName); if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE } }
+            Copy-Item '.\resources\translations\*.qm' '.\build' -Force -ErrorAction SilentlyContinue
+          }
+
+          Set-Location build
+          $cmakeArgs = @('-G','MinGW Makefiles','-DCMAKE_C_COMPILER=clang','-DCMAKE_CXX_COMPILER=clang++','-DCMAKE_MAKE_PROGRAM=mingw32-make','-DCMAKE_BUILD_TYPE=Release','-DENABLE_DEBUG_OUTPUT=OFF',"-DQT_PATH=$toolchainPath")
+          & cmake @cmakeArgs ..
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & cmake --build . --config Release -- -j4
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          if (!(Test-Path 'speedynote.exe')) { throw 'speedynote.exe was not produced' }
+          & windeployqt6 speedynote.exe
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+          $ntldd = "$toolchainPath\bin\ntldd.exe"
+          if (Test-Path $ntldd) {
+            $deps = & $ntldd -R 'speedynote.exe' 2>$null
+            foreach ($line in $deps) {
+              if ($line -match '^\s*(\S+\.dll)\s+=>\s+(.+?)\s*(\(0x|$)') {
+                $dll = $Matches[1]; $path = $Matches[2].Trim()
+                if ($path -and ($path -notmatch '^C:\\Windows') -and (Test-Path $path)) {
+                  if ($path.StartsWith('/clang64/')) { $path = $path -replace '^/clang64', $toolchainPath; $path = $path -replace '/', '\\' }
+                  if (Test-Path $path) { Copy-Item $path -Destination ".\$dll" -Force -ErrorAction SilentlyContinue }
+                }
+              }
+            }
+          }
+          Set-Location ..
 
       - name: Package
         shell: pwsh
         run: |
-          $root = "build/Release"
-          if (!(Test-Path $root)) { $root = "build" }
+          if (!(Test-Path 'build\speedynote.exe')) { throw 'speedynote.exe not found' }
+          Rename-Item 'build\speedynote.exe' 'MoSuan.exe'
           New-Item -ItemType Directory -Force -Path package | Out-Null
-          Get-ChildItem $root -Recurse -File | Where-Object { $_.Extension -in '.exe','.dll' } | Copy-Item -Destination package -Force
-          Compress-Archive -Path package/* -DestinationPath MoSuan-Windows-x64.zip -Force
+          Copy-Item 'build\*' 'package\' -Recurse -Force
+          Compress-Archive -Path 'package\*' -DestinationPath 'MoSuan-Windows-x64.zip' -Force
 
-      - name: Upload EXE package
+      - name: Upload MoSuan
         uses: actions/upload-artifact@v4
         with:
           name: MoSuan-Windows-x64
