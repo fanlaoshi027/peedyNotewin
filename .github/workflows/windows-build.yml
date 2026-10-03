@@ -35,6 +35,15 @@ jobs:
             mingw-w64-clang-x86_64-mupdf
             mingw-w64-clang-x86_64-ntldd
 
+      - name: Disable incompatible Windows Ink OCR
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $p = 'CMakeLists.txt'
+          $s = Get-Content $p -Raw
+          $s = $s -replace 'set\(SPEEDYNOTE_ENABLE_WINDOWS_INK_OCR ON CACHE BOOL "" FORCE\)', 'set(SPEEDYNOTE_ENABLE_WINDOWS_INK_OCR OFF CACHE BOOL "" FORCE)'
+          Set-Content -Path $p -Value $s -NoNewline
+
       - name: Build
         shell: pwsh
         timeout-minutes: 60
@@ -51,6 +60,7 @@ jobs:
             -DCMAKE_MAKE_PROGRAM=mingw32-make `
             -DCMAKE_BUILD_TYPE=Release `
             -DENABLE_DEBUG_OUTPUT=OFF `
+            -DSPEEDYNOTE_ENABLE_WINDOWS_INK_OCR=OFF `
             -DQT_PATH="$toolchainPath"
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           cmake --build . --config Release -- -j4
