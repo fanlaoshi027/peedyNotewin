@@ -26,11 +26,16 @@ replace_once(
     "    void setTouchGestureMode(int mode);\n    void setPdfDarkMode(bool enabled);\n",
 )
 
-# Toolbar.cpp: create the dark-mode toggle next to the existing touch control.
+# Toolbar.cpp
+replace_once(
+    "source/ui/Toolbar.cpp",
+    "#include <QResizeEvent>\n",
+    "#include <QResizeEvent>\n#include <QSignalBlocker>\n",
+)
 replace_once(
     "source/ui/Toolbar.cpp",
     "    m_touchGestureButton->setThemedIcon(\"hand\");\n    m_touchGestureButton->setToolTip(tr(\"Touch Gesture Mode\\n0: Off\\n1: Y-axis scroll only\\n2: Full gestures\"));\n    mainLayout->addWidget(m_touchGestureButton);\n\n    m_page2Widgets = {\n        m_ocrExpandable, m_panButton, undoGap,\n        m_undoButton, m_redoButton, touchGap, m_touchGestureButton\n    };\n",
-    "    m_touchGestureButton->setThemedIcon(\"hand\");\n    m_touchGestureButton->setToolTip(tr(\"Touch Gesture Mode\\n0: Off\\n1: Y-axis scroll only\\n2: Full gestures\"));\n    mainLayout->addWidget(m_touchGestureButton);\n\n    // --- PDF Dark Theme Toggle ---\n    m_pdfDarkModeButton = new ToggleButton(this);\n    m_pdfDarkModeButton->setThemedIcon(\"moon\");\n    m_pdfDarkModeButton->setToolTip(tr(\"Dark Theme\"));\n    mainLayout->addWidget(m_pdfDarkModeButton);\n\n    m_page2Widgets = {\n        m_ocrExpandable, m_panButton, undoGap,\n        m_undoButton, m_redoButton, touchGap, m_touchGestureButton,\n        m_pdfDarkModeButton\n    };\n",
+    "    m_touchGestureButton->setThemedIcon(\"hand\");\n    m_touchGestureButton->setToolTip(tr(\"Touch Gesture Mode\\n0: Off\\n1: Y-axis scroll only\\n2: Full gestures\"));\n    mainLayout->addWidget(m_touchGestureButton);\n\n    // --- PDF Dark Theme Toggle ---\n    m_pdfDarkModeButton = new ToggleButton(this);\n    m_pdfDarkModeButton->setText(QStringLiteral(\"☾\"));\n    m_pdfDarkModeButton->setToolTip(tr(\"Dark Theme\"));\n    mainLayout->addWidget(m_pdfDarkModeButton);\n\n    m_page2Widgets = {\n        m_ocrExpandable, m_panButton, undoGap,\n        m_undoButton, m_redoButton, touchGap, m_touchGestureButton,\n        m_pdfDarkModeButton\n    };\n",
 )
 replace_once(
     "source/ui/Toolbar.cpp",
@@ -48,14 +53,12 @@ replace_once(
     "    m_touchGestureButton->setDarkMode(darkMode);\n    m_pdfDarkModeButton->setDarkMode(darkMode);\n    m_pagerBackButton->setDarkMode(darkMode);\n",
 )
 
-# MainWindow.cpp: persist the toggle and apply the existing built-in PDF dark renderer.
+# MainWindow.cpp: use the existing PDF dark-mode renderer and its QSettings key.
 replace_once(
     "source/MainWindow.cpp",
     "    connect(m_toolbar, &Toolbar::straightLineToggled, this, [this](bool enabled) {\n",
     "    connect(m_toolbar, &Toolbar::pdfDarkModeToggled, this, [this](bool enabled) {\n        QSettings settings(\"SpeedyNote\", \"App\");\n        settings.setValue(\"display/pdfDarkMode\", enabled);\n        setPdfDarkModeEnabled(enabled);\n        if (DocumentViewport* vp = currentViewport()) {\n            vp->setPdfDarkModeEnabled(resolvePdfDarkMode(vp->document()));\n            vp->update();\n        }\n    });\n    m_toolbar->setPdfDarkMode(resolvePdfDarkMode(currentViewport() ? currentViewport()->document() : nullptr));\n\n    connect(m_toolbar, &Toolbar::straightLineToggled, this, [this](bool enabled) {\n",
 )
-
-# Keep the toolbar toggle synchronized when changing documents/tabs.
 replace_once(
     "source/MainWindow.cpp",
     "            vp->setPdfDarkModeEnabled(resolvePdfDarkMode(vp->document()));\n            vp->setSkipImageMasking(resolvePdfInvertIncludeImages(vp->document()));\n        }\n\n        // Phase 5.1 Task 4:",
