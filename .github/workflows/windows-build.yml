@@ -44,6 +44,13 @@ jobs:
           $s = $s -replace 'set\(SPEEDYNOTE_ENABLE_WINDOWS_INK_OCR ON CACHE BOOL "" FORCE\)', 'set(SPEEDYNOTE_ENABLE_WINDOWS_INK_OCR OFF CACHE BOOL "" FORCE)'
           Set-Content -Path $p -Value $s -NoNewline
 
+      - name: Apply MoSuan toolbar patch
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          python tools/patch_mosuan_toolbar.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Build
         shell: pwsh
         timeout-minutes: 60
