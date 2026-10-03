@@ -59,8 +59,3 @@ replace_once(
     "    connect(m_toolbar, &Toolbar::straightLineToggled, this, [this](bool enabled) {\n",
     "    connect(m_toolbar, &Toolbar::pdfDarkModeToggled, this, [this](bool enabled) {\n        QSettings settings(\"SpeedyNote\", \"App\");\n        settings.setValue(\"display/pdfDarkMode\", enabled);\n        setPdfDarkModeEnabled(enabled);\n        if (DocumentViewport* vp = currentViewport()) {\n            vp->setPdfDarkModeEnabled(resolvePdfDarkMode(vp->document()));\n            vp->update();\n        }\n    });\n    m_toolbar->setPdfDarkMode(resolvePdfDarkMode(currentViewport() ? currentViewport()->document() : nullptr));\n\n    connect(m_toolbar, &Toolbar::straightLineToggled, this, [this](bool enabled) {\n",
 )
-replace_once(
-    "source/MainWindow.cpp",
-    "            vp->setPdfDarkModeEnabled(resolvePdfDarkMode(vp->document()));\n            vp->setSkipImageMasking(resolvePdfInvertIncludeImages(vp->document()));\n        }\n\n        // Phase 5.1 Task 4:",
-    "            vp->setPdfDarkModeEnabled(resolvePdfDarkMode(vp->document()));\n            vp->setSkipImageMasking(resolvePdfInvertIncludeImages(vp->document()));\n            if (m_toolbar) m_toolbar->setPdfDarkMode(resolvePdfDarkMode(vp->document()));\n        }\n\n        // Phase 5.1 Task 4:",
-)
