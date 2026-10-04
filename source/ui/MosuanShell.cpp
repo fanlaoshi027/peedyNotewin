@@ -67,6 +67,10 @@ void MosuanShell::toggleFavorites() {
     if (m_showFavorites) m_showFavorites->setVisible(visible);
 }
 
+void MosuanShell::setDocumentViewport(DocumentViewport* viewport) {
+    setDocumentWidget(reinterpret_cast<QWidget*>(viewport));
+}
+
 void MosuanShell::setDocumentWidget(QWidget* widget) {
     if (!m_documentHost || !widget || widget == m_documentHost) return;
 
