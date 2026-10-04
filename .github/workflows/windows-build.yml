@@ -3,7 +3,7 @@ name: MoSuan Windows Build
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, mosuan-pdf-v01]
 
 permissions:
   contents: read
