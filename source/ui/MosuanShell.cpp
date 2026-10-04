@@ -19,40 +19,37 @@ MosuanShell::MosuanShell(QWidget* parent) : QWidget(parent) {
     m_toolbar = new MosuanTopToolbar(this);
     root->addWidget(m_toolbar);
 
-    auto* body = new QHBoxLayout();
-    body->setContentsMargins(0, 0, 0, 0);
-    body->setSpacing(0);
+    auto* body = new QWidget(this);
+    auto* bodyLayout = new QHBoxLayout(body);
+    bodyLayout->setContentsMargins(0, 0, 0, 0);
+    bodyLayout->setSpacing(0);
 
-    m_documentHost = new QWidget(this);
+    m_documentHost = new QWidget(body);
     m_documentHost->setObjectName("MosuanDocumentHost");
     auto* hostLayout = new QVBoxLayout(m_documentHost);
     hostLayout->setContentsMargins(0, 0, 0, 0);
     hostLayout->setSpacing(0);
+
     auto* empty = new QLabel(QStringLiteral("打开 PDF 开始书写"), m_documentHost);
     empty->setObjectName("MosuanEmptyState");
     empty->setAlignment(Qt::AlignCenter);
     hostLayout->addWidget(empty);
+    bodyLayout->addWidget(m_documentHost, 1);
 
-    m_favorites = new FavoritesSidebar(this);
-    body->addWidget(m_documentHost, 1);
-    body->addWidget(m_favorites);
+    m_favorites = new FavoritesSidebar(body);
+    bodyLayout->addWidget(m_favorites);
 
-    m_showFavorites = new QToolButton(m_documentHost);
+    m_showFavorites = new QToolButton(body);
     m_showFavorites->setObjectName("ShowFavoritesButton");
     m_showFavorites->setText(QStringLiteral("⭐"));
     m_showFavorites->setToolTip(QStringLiteral("显示收藏栏"));
     m_showFavorites->setFixedSize(38, 38);
     m_showFavorites->hide();
-    m_showFavorites->raise();
+    bodyLayout->addWidget(m_showFavorites);
 
-    root->addLayout(body, 1);
+    root->addWidget(body, 1);
 
-    connect(m_favorites, &FavoritesSidebar::destroyed, this, [this] {
-        m_favorites = nullptr;
-    });
-    connect(m_showFavorites, &QToolButton::clicked, this, [this] {
-        toggleFavorites();
-    });
+    connect(m_showFavorites, &QToolButton::clicked, this, &MosuanShell::toggleFavorites);
 
     setStyleSheet(R"(
         #MosuanShell { background: #0A1018; }
@@ -84,4 +81,5 @@ void MosuanShell::setDocumentWidget(QWidget* widget) {
 
     widget->setParent(m_documentHost);
     layout->addWidget(widget);
+    widget->show();
 }
