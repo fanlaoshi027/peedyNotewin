@@ -4,6 +4,7 @@
 
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QLayoutItem>
 #include <QToolButton>
 #include <QVBoxLayout>
 
@@ -48,6 +49,12 @@ MosuanShell::MosuanShell(QWidget* parent) : QWidget(parent) {
 
     connect(m_favorites, &FavoritesSidebar::destroyed, this, [this] {
         m_favorites = nullptr;
+    });
+    connect(m_showFavorites, &QToolButton::clicked, this, [this] {
+        toggleFavorites();
+    });
+    connect(m_favorites, &FavoritesSidebar::visibilityChanged, this, [this](bool visible) {
+        if (m_showFavorites) m_showFavorites->setVisible(!visible);
     });
 
     setStyleSheet(R"(
