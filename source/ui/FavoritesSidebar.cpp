@@ -2,6 +2,7 @@
 
 #include <QFileInfo>
 #include <QHBoxLayout>
+#include <QLabel>
 #include <QListWidget>
 #include <QToolButton>
 #include <QVBoxLayout>
