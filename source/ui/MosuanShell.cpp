@@ -53,9 +53,6 @@ MosuanShell::MosuanShell(QWidget* parent) : QWidget(parent) {
     connect(m_showFavorites, &QToolButton::clicked, this, [this] {
         toggleFavorites();
     });
-    connect(m_favorites, &FavoritesSidebar::visibilityChanged, this, [this](bool visible) {
-        if (m_showFavorites) m_showFavorites->setVisible(!visible);
-    });
 
     setStyleSheet(R"(
         #MosuanShell { background: #0A1018; }
