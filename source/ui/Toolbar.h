@@ -20,12 +20,7 @@ class HighlighterSubToolbar;
 class OcrSubToolbar;
 
 /**
- * Toolbar - new lightweight Windows-first toolbar for Mosuan/SpeedyNote.
- *
- * The old expandable/paged toolbar is intentionally removed from the visual
- * layer. Existing subtoolbar objects remain hidden as compatibility backends
- * because MainWindow already uses their settings/signals. They are not part of
- * the new UI and can be removed after the new settings surface is complete.
+ * Toolbar - lightweight Windows-first toolbar for Mosuan/SpeedyNote.
  */
 class Toolbar : public QWidget {
     Q_OBJECT
@@ -40,6 +35,7 @@ public:
     void setUndoEnabled(bool enabled);
     void setRedoEnabled(bool enabled);
     void setStraightLineMode(bool enabled);
+    void setPdfInvert(bool enabled);
 
     void onTabChanged(int newTabId, int oldTabId);
     void clearTabState(int tabId);
@@ -59,6 +55,7 @@ signals:
     void toolSelected(ToolType tool);
     void objectInsertModeSelected(DocumentViewport::ObjectInsertMode mode);
     void straightLineToggled(bool enabled);
+    void pdfInvertToggled(bool enabled);
     void undoClicked();
     void redoClicked();
     void touchGestureModeChanged(int mode);
@@ -82,6 +79,7 @@ private:
     QToolButton *m_objectButton = nullptr;
     QToolButton *m_panButton = nullptr;
     QToolButton *m_lineButton = nullptr;
+    QToolButton *m_pdfInvertButton = nullptr;
     QToolButton *m_undoButton = nullptr;
     QToolButton *m_redoButton = nullptr;
     QToolButton *m_touchButton = nullptr;
