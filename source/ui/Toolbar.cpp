@@ -13,6 +13,7 @@
 #include <QLabel>
 #include <QPainter>
 #include <QResizeEvent>
+#include <QSignalBlocker>
 #include <QToolButton>
 #include <QSizePolicy>
 
@@ -86,8 +87,6 @@ void Toolbar::setupUi()
     m_touchButton = makeToolButton(QStringLiteral("☝"), QStringLiteral("触控模式"), false);
     m_layout->addWidget(m_touchButton);
 
-    // Compatibility backends remain available to MainWindow, but their visual
-    // widgets are completely hidden. The new toolbar owns the presentation.
     m_penSubToolbar = new PenSubToolbar(this);
     m_markerSubToolbar = new MarkerSubToolbar(this);
     m_eraserSubToolbar = new EraserSubToolbar(this);
