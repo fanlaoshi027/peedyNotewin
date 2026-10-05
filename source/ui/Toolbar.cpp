@@ -1,4 +1,5 @@
 #include "Toolbar.h"
+#include "../MainWindow.h"
 
 #include "subtoolbars/PenSubToolbar.h"
 #include "subtoolbars/MarkerSubToolbar.h"
@@ -55,6 +56,7 @@ void Toolbar::setupUi()
     m_objectButton = makeToolButton(QStringLiteral("□"), QStringLiteral("对象选择"));
     m_panButton = makeToolButton(QStringLiteral("✋"), QStringLiteral("移动页面"));
     m_lineButton = makeToolButton(QStringLiteral("／"), QStringLiteral("直线（两个控制点）"), true);
+    m_pdfInvertButton = makeToolButton(QStringLiteral("◐"), QStringLiteral("PDF反色"), true);
 
     for (QToolButton* b : {m_penButton, m_markerButton, m_eraserButton,
                            m_highlighterButton, m_lassoButton, m_objectButton,
@@ -70,6 +72,8 @@ void Toolbar::setupUi()
     m_layout->addWidget(m_separator);
 
     m_layout->addWidget(m_lineButton);
+    m_layout->addWidget(m_pdfInvertButton);
+
     m_undoButton = makeToolButton(QStringLiteral("↶"), QStringLiteral("撤销"), false);
     m_redoButton = makeToolButton(QStringLiteral("↷"), QStringLiteral("重做"), false);
     m_layout->addWidget(m_undoButton);
@@ -118,6 +122,12 @@ void Toolbar::connectSignals()
     });
     connect(m_panButton, &QToolButton::clicked, this, [chooseTool]() mutable { chooseTool(ToolType::Pan); });
     connect(m_lineButton, &QToolButton::toggled, this, &Toolbar::straightLineToggled);
+    connect(m_pdfInvertButton, &QToolButton::toggled, this, [this](bool enabled) {
+        emit pdfInvertToggled(enabled);
+        if (auto* mainWindow = qobject_cast<MainWindow*>(window())) {
+            mainWindow->setPdfDarkModeEnabled(enabled);
+        }
+    });
     connect(m_undoButton, &QToolButton::clicked, this, &Toolbar::undoClicked);
     connect(m_redoButton, &QToolButton::clicked, this, &Toolbar::redoClicked);
     connect(m_touchButton, &QToolButton::clicked, this, [this]() {
@@ -164,6 +174,14 @@ void Toolbar::setTouchButtonText()
     } else {
         m_touchButton->setText(QStringLiteral("☝"));
         m_touchButton->setToolTip(QStringLiteral("触控：完整手势"));
+    }
+}
+
+void Toolbar::setPdfInvert(bool enabled)
+{
+    if (m_pdfInvertButton) {
+        QSignalBlocker blocker(m_pdfInvertButton);
+        m_pdfInvertButton->setChecked(enabled);
     }
 }
 
